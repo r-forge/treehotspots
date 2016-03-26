@@ -1,0 +1,230 @@
+---
+title: "Hotspot Detection with trees"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+#source('H:/DropboxHWR/Coding/Rpackages/treehotspotspackage/TreeHotspots/R/list.rules.R')
+#source('H:/DropboxHWR/Coding/Rpackages/treehotspotspackage/ExtraCode/Mobsters.R')
+```
+
+### Unimodal "bump"
+
+```{r}
+library(TreeHotspots)
+library(partykit)
+suppressMessages(library(PBSmapping, quietly = TRUE))
+
+N = 500;
+set.seed(50);
+#spherical 
+Bump1 <- cbind(x=rnorm(N,0,.45), y=rnorm(N,0,.45),l=1);#center at (0,0)
+
+Bckgr <- cbind(x=runif(2*N,-4,4), y=runif(2*N,-4,4),l=0);#center at (0,0);
+data1 <- as.data.frame(rbind(Bump1, Bckgr));
+data1$l = factor(data1$l)
+  
+# mb <- glmtree(l ~ x + y, data = data1, family = binomial, minsize = 100, prune = "BIC")
+# plot(mb)
+#  plot(y ~ x, col = as.numeric(l), data = data1, cex = 0.5, pch=20,main="glmtree")
+# PartitionParty(mb,vars=c("x","y"), verbose=0)
+
+  library(rpart)
+ rp = rpart(l ~ x + y, data = data1)
+ #plot(rp)
+ party_rp <- as.party(rp)
+ plot(party_rp)
+ 
+ plot(y ~ x, col = as.numeric(l), data = data1, cex = 0.5, pch=20,main="rpart")
+ PartitionParty(party_rp,vars=c("x","y"), verbose=0)
+ 
+ # mb <- glmtree(l ~ x + y, data = data1, family = binomial, minsize = 100, prune = "BIC")
+ # plot(mb)
+ # 
+ # plot(y ~ x, col = as.numeric(l), data = data1, cex = 0.5, pch=20)
+ # PartitionParty(mb,vars=c("x","y"), verbose=0)
+```
+-----------------------------
+
+#### very elliptical:
+```{r}
+library(MASS)
+(Sigma <- matrix(c(1,0.85,0.85,1),2,2))
+Bump2 = cbind(mvrnorm(n = N, rep(0, 2), Sigma),l=1)
+colnames(Bump2)[1:2] = c("x","y")
+#Bump2 <- cbind(x=rnorm(N/2,0,.75), y=rnorm(N/2,0,.75),l=0);#center at (0,0)
+data2 <- as.data.frame(rbind(Bump2, Bckgr));
+data2$l = factor(data2$l)
+COLS = rgb(0:1,rep(0,2),1:0, 0.5);
+
+ rp = rpart(l ~ x + y, data = data2)
+ #plot(rp)
+ party_rp <- as.party(rp)
+ plot(party_rp)
+ 
+ plot(y ~ x, col = as.numeric(l), data = data2, cex = 0.5, pch=20,main="rpart")
+ PartitionParty(party_rp,vars=c("x","y"), verbose=0) 
+ 
+ 
+```
+
+-----------------------------
+
+### Artifial data at multiple scales and angles:
+
+```{r, echo=TRUE, fig.width= 12, fig.height=8}
+# 
+ set.seed(123)
+  library(mvtnorm)
+  cov1 = sigma = matrix(2*c(1,-0.9,-0.9,1),ncol=2)
+  Clus1 = rmvnorm(100,mean=c(X=10,Y=10), sigma = cov1)
+  #TestRotation(Clus1, center=colMeans(Clus1))
+  cov2 = sigma = matrix(0.5*c(1,0.9,0.9,1),ncol=2)
+  Clus2 = rmvnorm(100,mean=c(X=3,Y=3), sigma = cov2)
+  cov3 = sigma = matrix(c(0.1,0,0,0.1),ncol=2)
+  Clus3 = rmvnorm(100,mean=c(X=6,Y=8), sigma = cov3)
+  msdata = rbind.data.frame(Clus1,Clus2,Clus3)
+  #TestRotation(msdata, center=colMeans(msdata[,1:2]))
+  colnames(msdata) = c("lon","lat")
+  rx = range(msdata[,"lon"])
+  ry = range(msdata[,"lat"])
+  msdata[,"clus"] = rep(1:3,each=100)
+  N=300
+  Bckgr = cbind.data.frame(lon= runif(N,rx[1],rx[2]),
+                           lat= runif(N,ry[1],ry[2]),
+                           clus=0)
+  #alternatively, regular grid:
+  # N1=N2=N0 = round(sqrt(N))
+  # Bckgr =expand.grid(lon= seq(rx[1],rx[2],length=N1),
+  #                     lat= seq(ry[1],ry[2],length=N2),
+  #                     clus=0)
+  
+  msdata=rbind.data.frame(msdata,Bckgr)
+  msdata$clus = factor(msdata$clus)
+  #plot(lat~lon, data=msdata, col = clus+1, pch = 20,cex=0.75)
+  
+  ct <- ctree(clus ~ lon+lat,data = msdata)
+  
+  plot(ct)
+  plot(lat ~ lon,data = msdata, col = clus, pch=20,cex=0.6,main="ctree")
+  PartitionParty(ct,vars=c("lon","lat"), verbose=0)
+  
+  rp = rpart(clus ~ lon+lat,data = msdata, control=rpart.control(minbucket=40,cp=0.01))
+ #plot(rp)
+ party_rp <- as.party(rp)
+ plot(lat ~ lon,data = msdata, col = clus, pch=20,cex=0.6,main="rpart")
+PartitionParty(party_rp,vars=c("lon","lat"), verbose=0)
+  
+
+ clusts = FindClusters(clus ~ lon+lat,msdata,minsize=50,minArea=NULL,
+                       maxArea=NULL,ORfilter=list(OR=FALSE,OR1=NULL,OR2=NULL),
+                         PLOT=0, verbose = 0)
+ #points(lon~lat,data=msdata,col=as.numeric(msdata[,"clus"]),pch=20,cex=.7)
+
+```
+
+### Old Faithful Geyser data set 
+```{r, echo=TRUE, fig.width=10, fig.height=8}
+  library(tree)
+  data(faithful, env = environment())
+  
+  n = nrow(faithful)
+  faithful[,"Cluster"] = 1#faithfulMclust$classification
+  N=400
+  Bckgr = cbind.data.frame(eruptions= runif(N,min(faithful[,"eruptions"]),max(faithful[,"eruptions"])),
+                           waiting= runif(N,min(faithful[,"waiting"]),max(faithful[,"waiting"])),
+                           Cluster=0)
+  faithful=rbind.data.frame(faithful,Bckgr)
+  
+  ftr=tree(as.factor(Cluster) ~ eruptions+waiting,faithful, 
+           mincut=40)
+  partition.tree(ftr, ordvars=c("eruptions","waiting"))
+  points(waiting~eruptions, data = faithful,pch=20, cex=0.5, col = Cluster+1)
+  tp = TreePartition(ftr, ordvars=c("eruptions","waiting"))
+  PlotPartition(tp,lab=TRUE)
+  ii = which(tp[,"maxClass"] %in% 1 | rownames(tp) == "rect0")
+  PlotPartition(tp[ii,],lab=TRUE, col = c(0, 2:(length(ii))))
+```
+
+### map overlay:
+
+```{r, echo=TRUE, fig.width=10, fig.height=8}
+data("drugCrimes")
+library("RgoogleMaps")
+  drugCrimes$MATCH = factor(drugCrimes$MATCH)
+  
+  rp = rpart(MATCH ~ X+Y,data = drugCrimes, control=rpart.control(minbucket=40,cp=0.01))
+ party_rp <- as.party(rp)
+ plot(party_rp)
+ ranRows=sample(nrow(drugCrimes),10000)
+ plot(Y~X,data=drugCrimes[ranRows,],col=AddAlpha(4-as.numeric(MATCH)),pch=20,cex=0.6)
+ PartitionParty(party_rp,vars=c("X","Y"), verbose=0)
+ 
+ 
+spot1 = getHotspots(MATCH ~ X+Y,drugCrimes)
+ CrimesInClus = DataInsideBox(spot1[1:5,],drugCrimes)
+ mean(as.numeric(CrimesInClus$MATCH))-1
+ 
+ #plot(Y~X,data=drugCrimes[ranRows,],col=AddAlpha(4-as.numeric(MATCH)),pch=20,cex=0.6)
+ #addPolys(spot1[1:5,],density=NULL)
+ 
+ plotPolys(spot1[1:5,],density=NULL,xlim=range(drugCrimes$X),ylim=range(drugCrimes$Y),border="blue")
+ points(Y~X,data=drugCrimes[ranRows,],col=AddAlpha(4-as.numeric(MATCH)),pch=20,cex=0.6)
+ 
+ ct=ctree(MATCH ~ X+Y,data = drugCrimes)
+ #plot(ct)
+ Leafs = PartitionParty(ct, c("X","Y"), PLOT=F)
+ 
+ # LeafProbs = tapply(as.numeric(drugCrimes$MATCH), predict(ct,type="node"), function(y) prop.table(y))
+ # 
+ LeafProbs = sort(tapply(as.numeric(drugCrimes$MATCH), predict(ct,type="node"), function(y) mean(y)),decreasing=TRUE)
+ 
+ NN = table(predict(ct,type="node"))
+ 
+ #Leafs[["146"]]
+ for (i in 1:10){
+   n = names(LeafProbs)[i]
+   m= matrix(Leafs[[n]][-1,],nrow=1)
+   colnames(m) = c("xleft","ybottom", "xright", "ytop")
+   m2 = Rect2PBSpolys(m)
+   a= calcArea(m2)$area
+   if (a > 10^(-6) & NN[n]> 100)  {
+     cat("node ID", n, format(a,digits = 2),NN[n],"\n")
+     addPolys(m2,density=1, border = i)
+   }
+ }
+ 
+ #AllSpots = FindClusters(MATCH ~ X+Y,drugCrimes, minArea=10^(-6))
+ #AllSpots = getHotspots(MATCH ~ X+Y,drugCrimes, minArea=10^(-7),ORfilter=list(OR=TRUE,OR1=NULL,OR2=NULL),verbose=2)
+ #clearly sth. is terribly wrong here:
+ #addPolys(AllSpots,border="blue",density=NULL)
+ 
+ #on map:
+ SFmap = GetMap.bbox(lonR=c(-122.4266, -122.41),latR=c(37.72, 37.8))
+ PlotOnStaticMap(SFmap,lon=drugCrimes$X[ranRows],lat=drugCrimes$Y[ranRows],
+                 col=AddAlpha(4-as.numeric(drugCrimes$MATCH)[ranRows]),pch=20,cex=0.6)
+```
+
+### Interactive Maps
+
+```{r}
+   m1= matrix(Leafs[["79"]][-1,],nrow=1)
+  colnames(m1) = c("xleft","ybottom", "xright", "ytop")
+  m2 = Rect2PBSpolys(m1)
+   
+
+library("leaflet")
+
+m = leaflet() %>% addTiles()
+
+# move the center to SF 
+m = m %>% setView(-122.42, 37.77, zoom = 13)
+
+# circle (units in metres)
+x = subset(drugCrimes[ranRows,],MATCH == 0)
+y = subset(drugCrimes[ranRows,],MATCH == 1)
+m %>% addCircleMarkers(x$X,x$Y , color=3, radius = 1) %>% addCircleMarkers(y$X,y$Y , color=2, radius = 1) %>% addPolygons(m2$X, m2$Y, layerId = 'hotspot1')
+
+```
