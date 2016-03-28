@@ -1,8 +1,8 @@
 Package: TreeHotspots
 Type: Package
-Title: Hotspot detection using classification trees
+Title: Hotspot Detection using Classification Trees
 Version: 1.0
-Date: 2016-02-04
+Date: 2016-03-29
 Depends: R (>= 2.10)
 Imports: graphics, stats, tree, RgoogleMaps, PBSmapping, mvtnorm, partykit, rpart
 Suggests: MASS

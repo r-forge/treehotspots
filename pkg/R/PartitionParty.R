@@ -39,10 +39,11 @@ PartitionParty = structure(function#Plot the partitions of a partykit tree model
  invisible(Leafs)
 }, ex = function(){
  if (0){
-   data(SampleData)
+   
    library(partykit)
    library(rpart)
-   #unimoidal bump
+   #unimodal bump
+   data(data1, envir = environment())
    rp = rpart(l ~ x + y, data = data1)
    #plot(rp)
    party_rp <- partykit::as.party(rp)
@@ -52,7 +53,7 @@ PartitionParty = structure(function#Plot the partitions of a partykit tree model
    PartitionParty(party_rp,vars=c("x","y"), verbose=0)
    
    #elliptical bump:
-   
+   data(data2, envir = environment())
    rp = rpart(l ~ x + y, data = data2)
    #plot(rp)
    party_rp <- as.party(rp)
@@ -62,6 +63,7 @@ PartitionParty = structure(function#Plot the partitions of a partykit tree model
    PartitionParty(party_rp,vars=c("x","y"), verbose=0) 
    
    #Artifial data at multiple scales and angles:
+   data(msdata, envir = environment())
    ct <- ctree(clus ~ lon+lat,data = msdata,
                control = ctree_control(multiway=TRUE))
    

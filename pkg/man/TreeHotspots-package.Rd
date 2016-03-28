@@ -6,7 +6,7 @@
 
 \docType{package}
 
-\title{Hotspot detection using classification trees}
+\title{Hotspot Detection using Classification Trees}
 
 
 \description{Extracts leaves from trees that are candidates for hotspots.}
