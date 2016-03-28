@@ -1,7 +1,7 @@
 \name{PartitionParty}
 \alias{PartitionParty}
-\title{Plot the partitions of a partykit tree model.}
-
+\title{Plot the partitions of a partykit tree model}
+\description{COmputes and plots the partitions of a partykit tree model in 2 dimensions.                           }
 \usage{PartitionParty(ct, vars = c("lon", "lat"), BBOX, PLOT = TRUE, 
     labs = TRUE, verbose = 0)}
 \arguments{
@@ -28,7 +28,7 @@ if (0){
   #unimoidal bump
   rp = rpart(l ~ x + y, data = data1)
   #plot(rp)
-  party_rp <- as.party(rp)
+  party_rp <- partykit::as.party(rp)
   plot(party_rp)
   
   plot(y ~ x, col = as.numeric(l), data = data1, cex = 0.5, pch=20)

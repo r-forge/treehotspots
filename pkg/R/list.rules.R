@@ -6,7 +6,7 @@ list.rules = structure(function#compute rules for terminal nodes
   verbose=0 ##<< level of verbosity
 ){
     if (is.null(i)) 
-        i <- nodeids(x, terminal = TRUE)
+        i <- partykit::nodeids(x, terminal = TRUE)
     if (length(i) > 1) {
         ret <- sapply(i, list.rules, x = x, verbose=verbose)
         names(ret) <- if (is.character(i)) 
@@ -20,7 +20,7 @@ list.rules = structure(function#compute rules for terminal nodes
     stopifnot(i <= length(x) & i >= 1)
     i <- as.integer(i)
     if (verbose) cat("working on node ", i, "....\n")
-    dat <- data_party(x, i)
+    dat <- partykit::data_party(x, i)
     if (!is.null(x$fitted)) {
         findx <- which("(fitted)" == names(dat))[1]
         fit <- dat[, findx:ncol(dat), drop = FALSE]
@@ -38,14 +38,14 @@ list.rules = structure(function#compute rules for terminal nodes
     
     #NumRule = list()
     recFun <- function(node) {
-        if (id_node(node) == i) 
+        if (partykit::id_node(node) == i) 
             return(NULL)
-        kid <- sapply(kids_node(node), id_node)
+        kid <- sapply(partykit::kids_node(node), partykit::id_node)
         whichkid <- max(which(kid <= i))
-        split <- split_node(node)
-        ivar <- varid_split(split)
+        split <- partykit::split_node(node)
+        ivar <- partykit::varid_split(split)
         svar <- names(dat)[ivar]
-        index <- index_split(split)
+        index <- partykit::index_split(split)
         if (is.factor(dat[, svar])) {
             slevels <- levels(dat[, svar])[index == whichkid]
             srule <- paste(svar, " %in% c(\"", paste(slevels, 
@@ -54,10 +54,10 @@ list.rules = structure(function#compute rules for terminal nodes
         else {
             if (is.null(index)) 
                 index <- 1:length(kid)
-            breaks <- cbind(c(-Inf, breaks_split(split)), c(breaks_split(split), 
+            breaks <- cbind(c(-Inf, partykit::breaks_split(split)), c(partykit::breaks_split(split), 
                 Inf))
             sbreak <- breaks[index == whichkid, ]
-            right <- right_split(split)
+            right <- partykit::right_split(split)
             srule <- c()
             #nrule = matrix(c(-Inf,Inf,-Inf,Inf),nrow=1,
             #               dimnames=list(svar,c(">","<=", ">=","<")))#numerical version of rules
@@ -88,11 +88,9 @@ list.rules = structure(function#compute rules for terminal nodes
         
         return(recFun(node[[whichkid]]))
     }
-    node <- recFun(node_party(x))
+    node <- recFun(partykit::node_party(x))
     #NumRule[[as.character(i)]] = ruleMatrix
-    if (verbose) {
-      print(NumRule[[i]])
-    }
+    
     #ruleMatrix = ruleMatrix[rowSums(is.na(ruleMatrix))<4,,drop=FALSE]
     #ruleMatrix = ruleMatrix[,colSums(is.na(ruleMatrix))<nrow(ruleMatrix)]
     #return(paste(rule, collapse = " & "))
@@ -103,6 +101,7 @@ list.rules = structure(function#compute rules for terminal nodes
 })
 
 Rules2BoundingBox = structure(function#return bounding box of leaf node
+###return bounding box of leaf node
   (
   ruleMatrix, ##<< object returned by list.rules
   bbox = list(lon=c(40,60), lat=c(20,30)), ##<<replace Inf values with the corresponding bounding box limits

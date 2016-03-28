@@ -60,15 +60,15 @@ FindClusters = structure(function# find spatial clusters using supervised learni
      polys[[as.character(a)]] = rotPolys
      if (verbose) cat("Num polys found: ", nrow(rotPolys)/5, "\n")
      if (PLOT) {
-       require(PBSmapping)
+       #require(PBSmapping)
        #browser()
-       topPolys = unique(subset(rotPolys, maxClass != 0)[,c("PID","yval")])
+       topPolys = unique(subset(rotPolys, rotPolys$maxClass != 0)[,c("PID","yval")])
        topPolys = topPolys[order(topPolys$yval),]
-       topPolys=subset(rotPolys, PID %in% tail(topPolys$PID,PLOT))
-       plotPolys(topPolys,xlim = Xr, ylim = Yr, col = rgb((1:PLOT)/PLOT,0.2,0.3), main = paste("angle:", a))
-       coords = calcCentroid(topPolys)
+       topPolys=subset(rotPolys, rotPolys$PID %in% tail(topPolys$PID,PLOT))
+       PBSmapping::plotPolys(topPolys,xlim = Xr, ylim = Yr, col = rgb((1:PLOT)/PLOT,0.2,0.3), main = paste("angle:", a))
+       coords = PBSmapping::calcCentroid(topPolys)
        for (i in 1:nrow(coords))
-         text(coords[i,"X"],coords[i,"Y"],subset(topPolys, PID==coords[i,"PID"])[1,"lab"] )
+         text(coords[i,"X"],coords[i,"Y"],subset(topPolys, topPolys$PID==coords[i,"PID"])[1,"lab"] )
        
        #points(formula, data = data)
        

@@ -1,7 +1,7 @@
 \name{Rules2BoundingBox}
 \alias{Rules2BoundingBox}
 \title{return bounding box of leaf node}
-
+\description{return bounding box of leaf node}
 \usage{Rules2BoundingBox(ruleMatrix, bbox = list(lon = c(40, 60), lat = c(20, 
     30)), verbose = 0)}
 \arguments{

@@ -52,7 +52,7 @@ PlotClusters = structure(function#plot clusters on a map
   if (missing(polys)) {
     load(crimeFile)#data(drugCrimes)
     crimes$violent = as.logical(crimes$violent)
-    if (DENS) crimes = subset(crimes, violent == TRUE)
+    if (DENS) crimes = subset(crimes, crimes$violent == TRUE)
     polys = FindClusters(crimes,DENS=DENS, OR2=0,OR1=1.2,minArea=10,maxArea=1000)
   }
   #polys = FindClusters(subset(crimes, violent == TRUE),DENS=TRUE, OR2=0,OR1=1.2,minArea=10,maxArea=1000)

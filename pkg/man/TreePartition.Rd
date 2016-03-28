@@ -19,7 +19,7 @@ The first row pertains to the global bounding box, .i.e. the rectangle containin
 The columns in detail are:
 columns 1-4 (xleft,ybottom,xright,ytop) are the bounding box for the respective rectangle
 columns 5-6 (yy1,yy2) contain the (x,y) coords of the center of the rectangle
-area gives the rectangular area computed by $10^6 * \delta X * \delta Y$
+area gives the rectangular area computed by $10^6 * delta X * delta Y$
 yval for factors: maximum class probability, for regression: conditional average of response inside rectangle
 lab label used by \link{PlotPartition}
 maxClass for factors only: majority class label inside rectangle}

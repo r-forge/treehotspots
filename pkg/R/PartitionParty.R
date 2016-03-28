@@ -1,4 +1,5 @@
-PartitionParty = structure(function#Plot the partitions of a partykit tree model.
+PartitionParty = structure(function#Plot the partitions of a partykit tree model
+### COmputes and plots the partitions of a partykit tree model in 2 dimensions.                           
 (
  ct, ##<< object of class partykit
  vars = c("lon","lat"), ##<< variable names in 2D
@@ -18,7 +19,7 @@ PartitionParty = structure(function#Plot the partitions of a partykit tree model
    if (verbose) print(BBOX)
  }
  Leafs = list()
- for (i in nodeids(ct, terminal = TRUE)){
+ for (i in partykit::nodeids(ct, terminal = TRUE)){
    tmp = list.rules(ct,i,verbose=0)
    Leaf = Rules2BoundingBox(tmp$ruleMatrix,bbox=BBOX)
    if (verbose>1) browser()
@@ -28,7 +29,7 @@ PartitionParty = structure(function#Plot the partitions of a partykit tree model
  }
  #draw rectangles
  if (PLOT){
-   for (i in nodeids(ct, terminal = TRUE)){
+   for (i in partykit::nodeids(ct, terminal = TRUE)){
      Leaf=Leafs[[as.character(i)]]
      gt=grep(">", colnames(Leaf));lt=grep("<", colnames(Leaf))
      rect(xleft=Leaf[vars[1],gt], ybottom=Leaf[vars[2],gt], xright=Leaf[vars[1],lt], ytop=Leaf[vars[2],lt])
@@ -44,7 +45,7 @@ PartitionParty = structure(function#Plot the partitions of a partykit tree model
    #unimoidal bump
    rp = rpart(l ~ x + y, data = data1)
    #plot(rp)
-   party_rp <- as.party(rp)
+   party_rp <- partykit::as.party(rp)
    plot(party_rp)
    
    plot(y ~ x, col = as.numeric(l), data = data1, cex = 0.5, pch=20)

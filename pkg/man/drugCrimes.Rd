@@ -11,23 +11,24 @@ data downloaded from url
 \format{
   A data frame with 97248 observations on the following 17 variables.
   \describe{
-%    \item{IncidntNum}{incident number} 
- %  \item{Category}{crime category} 
-    \item{Descript}{description of crime} 
-    \item{DayOfWeek}{day of week} 
+   \item{Category}{crime category} 
     \item{Date}{date} 
-    \item{Time}{time} 
+    \item{DayOfWeek}{day of week}
+    \item{Descript}{description of crime} 
+    \item{HourOfWeek}{hour of week, ranging from 0 to 168}
+     \item{HrOfDay}{hour of day}
+    \item{IncidntNum}{Incident Number} 
+   \item{Location}{address} 
+   \item{MATCH}{logical flag indicating drug keyword match} 
     \item{PdDistrict}{police district} 
- %  \item{Resolution}{Outcome} 
-  %  \item{Location}{address} 
+   \item{PhaseOfWeek}{phase of week} 
+   \item{Resolution}{Outcome} 
+  \item{Time}{time}
+  \item{TimeOfDay}{time of day} 
     \item{X}{latitude} 
     \item{Y}{longitude} 
     \item{violent}{logical indicating violent crime} 
-%    \item{HrOfDay}{hour of day} 
-%    \item{TimeOfDay}{time of day} 
-%    \item{HourOfWeek}{hour of week, ranging from 0 to 168} 
-%    \item{PhaseOfWeek}{phase of week} 
-%    \item{MATCH}{not sure}
+ 
   }
 }
 \details{
@@ -50,9 +51,7 @@ drugCrimes = FilterCrimes(2007:2013, KeyWords=drugPhrases,                      
 \source{
 	\url{http://www.datasf.org/story.php?title=crime-incident-data}
 }
-\references{
-%%  ~~ possibly secondary sources and usages ~~
-}
+
 \examples{
  data(drugCrimes)
  plot(Y~X,data=drugCrimes,col=MATCH+1,pch=20,cex=0.6)

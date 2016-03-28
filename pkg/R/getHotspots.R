@@ -25,8 +25,8 @@ getHotspots =structure(function# find spatial clusters using supervised learning
      if (inherits(fit, "singlenode") | !inherits(fit, "tree") ) 
        return(NULL)
    } else if (TreeAlgorithhm == "rpart") {
-     fit =rpart(formula, data = rotX, x = TRUE, y = TRUE,,model=TRUE,
-                control=rpart.control(minsplit = minsize),...)
+     fit =rpart::rpart(formula, data = rotX, x = TRUE, y = TRUE,,model=TRUE,
+                control=rpart::rpart.control(minsplit = minsize),...)
      
      tmp = attr(formula(fit),"dataClasses")
      ycol=names(tmp)[1]
@@ -73,7 +73,7 @@ getHotspots =structure(function# find spatial clusters using supervised learning
    if (!is.null(NullClass)){
      ElSoFar = sum(as.character(xy$maxClass) == NullClass)
      if (verbose) cat(ElSoFar,"instances of NULL class eliminated \n")
-     xy = subset(xy, as.character(maxClass) != NullClass)
+     xy = subset(xy, as.character(xy$maxClass) != NullClass)
    }
    
    HotSpots = rep(TRUE, nrow(xy))

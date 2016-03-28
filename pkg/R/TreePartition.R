@@ -169,7 +169,7 @@ TreePartition = structure(function#Convert the recursively defined partitions of
       rz <- range(rotX[[ordvars[2L]]])
       rz <- rz + c(-0.025, 0.025) * diff(rz)
       #browser()
-      party_rp <- as.party(TreeFit)
+      party_rp <- partykit::as.party(TreeFit)
       Leafs = PartitionParty(party_rp, ordvars, PLOT=F)
       nl = length(Leafs)
       LeafProbs = tapply(as.numeric(rotX[,1]), predict(party_rp,type="node"), function(y) mean(y))
@@ -237,7 +237,7 @@ TreePartition = structure(function#Convert the recursively defined partitions of
   ### The columns in detail are:
   ### columns 1-4 (xleft,ybottom,xright,ytop) are the bounding box for the respective rectangle
   ### columns 5-6 (yy1,yy2) contain the (x,y) coords of the center of the rectangle
-  ### area gives the rectangular area computed by $10^6 * \delta X * \delta Y$
+  ### area gives the rectangular area computed by $10^6 * delta X * delta Y$
   ### yval for factors: maximum class probability, for regression: conditional average of response inside rectangle
   ### lab label used by \link{PlotPartition}
   ### maxClass for factors only: majority class label inside rectangle

@@ -62,9 +62,9 @@ PolyOverlap = structure(function#computes the relative overlap of two polygons
 (polysA, ##<< 1st polygon 
  polysB  ##<< 2nd polygon
 ){
-  polysC = try(joinPolys(polysA,polysB,operation="INT"),silent=TRUE)#from PBSmapping
+  polysC = try(PBSmapping::joinPolys(polysA,polysB,operation="INT"),silent=TRUE)#from PBSmapping
   if (is.null(polysC) | class(polysC)[1] =="try-error") return(c(0,0))
-  areaIntersect = calcArea(polysC)[,"area"]
+  areaIntersect = PBSmapping::calcArea(polysC)[,"area"]
   OverlappolysA = areaIntersect/calcArea(polysA)[,"area"]
   OverlappolysB = areaIntersect/calcArea(polysB)[,"area"]
   return(c(OverlappolysA,OverlappolysB))
