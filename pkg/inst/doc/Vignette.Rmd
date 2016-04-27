@@ -170,7 +170,7 @@ spot1 = getHotspots(MATCH ~ X+Y,drugCrimes)
  #plot(Y~X,data=drugCrimes[ranRows,],col=AddAlpha(4-as.numeric(MATCH)),pch=20,cex=0.6)
  #addPolys(spot1[1:5,],density=NULL)
  
- plotPolys(spot1[1:5,],density=NULL,xlim=range(drugCrimes$X),ylim=range(drugCrimes$Y),border="blue")
+ plotPolys(spot1[1:5,],density=NULL,xlim=range(drugCrimes$X),ylim=range(drugCrimes$Y),border="blue",lwd=2)
  points(Y~X,data=drugCrimes[ranRows,],col=AddAlpha(4-as.numeric(MATCH)),pch=20,cex=0.6)
  
  ct=ctree(MATCH ~ X+Y,data = drugCrimes)

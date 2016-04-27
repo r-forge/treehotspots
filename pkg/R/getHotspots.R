@@ -98,5 +98,11 @@ getHotspots =structure(function# find spatial clusters using supervised learning
    ### identified clusters (if any)
  }, ex = function(){
    #examples to come
-   print(1)
+   data("drugCrimes")
+   drugCrimes$MATCH = factor(drugCrimes$MATCH)
+   spot1 = getHotspots(MATCH ~ X+Y,drugCrimes)
+   suppressWarnings(suppressMessages(library("PBSmapping")))
+   plotPolys(spot1[1:5,],density=NULL,xlim=range(drugCrimes$X),ylim=range(drugCrimes$Y),border="blue",lwd=2)
+   points(Y~X,data=drugCrimes[ranRows,],col=AddAlpha(4-as.numeric(MATCH)),pch=20,cex=0.6)
+   
  })
