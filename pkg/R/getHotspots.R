@@ -6,8 +6,8 @@ getHotspots =structure(function# find spatial clusters using supervised learning
    rotX, ##<< data, possibly already rotated
    NullClass="0", ##<< if y is a factor, this is the category used for the background
    minsize = 200,##<< minimum number of points inside a cluster
-   minArea=20,##<< minimum area of a cluster
-   maxArea=250,##<< maximum area of a cluster
+   minArea=20,##<< minimum area of a cluster, units: km^2
+   maxArea=250,##<< maximum area of a cluster, units: km^2
    ORfilter=list(OR=TRUE,OR1=1.8,OR2=0.1), ##<< filter on minimum and maximum odds ratios (OR) 
    TreeAlgorithhm = c("rpart","tree")[1], ##<< which tree algorithm to choose
    verbose=1,##<< level of verbosity
@@ -38,7 +38,6 @@ getHotspots =structure(function# find spatial clusters using supervised learning
    }
    #browser()
    xy=TreePartition(fit,ordvars=xcols)
-   #browser()
    
    if (verbose) cat("overall avg:", xy[1,"yval"], ", numRect = ",nrow(xy),"\n")
    if (verbose>1) {
@@ -70,13 +69,20 @@ getHotspots =structure(function# find spatial clusters using supervised learning
        OR = xy[,"yval"]/xy[1,"yval"]
    }
    #browser()
+   HotSpots = rep(TRUE, nrow(xy))
+   
    if (!is.null(NullClass)){
+     #eliminated so far:
      ElSoFar = sum(as.character(xy$maxClass) == NullClass)
      if (verbose) cat(ElSoFar,"instances of NULL class eliminated \n")
-     xy = subset(xy, as.character(xy$maxClass) != NullClass)
+     ToKeep = as.character(xy$maxClass) != NullClass
+     xy = subset(xy, ToKeep)
+     HotSpots = subset(HotSpots, ToKeep)
+     OR = subset(OR, ToKeep)
    }
    
-   HotSpots = rep(TRUE, nrow(xy))
+   if (verbose<0) browser()
+   
    if (!is.null(ORfilter$OR1) & !is.null(ORfilter$OR2)) {
      HotSpots = HotSpots & (OR>ORfilter$OR1 | OR < ORfilter$OR2)
    } else if (!is.null(ORfilter$OR1)) {
@@ -86,6 +92,14 @@ getHotspots =structure(function# find spatial clusters using supervised learning
    }
    ElSoFar= sum(!HotSpots)
    if (verbose) cat("OR filter eliminates",ElSoFar, "rectangles\n")
+   
+   if (1){
+      #Compute the areas in km^2:
+     spots=Rect2PBSpolys(xy)
+      Areakm2 = suppressWarnings(PBSmapping::calcArea(PBSmapping::as.PolySet(spots[,1:5], projection="LL")))
+      xy[,"area"] = Areakm2$area
+   }
+   
    if (!is.null(minArea)) HotSpots = HotSpots & xy[,"area"]>minArea
    if (verbose) cat("minArea filter eliminates another",sum(!HotSpots)-ElSoFar, "rectangles\n")
    ElSoFar= sum(!HotSpots)
@@ -94,6 +108,7 @@ getHotspots =structure(function# find spatial clusters using supervised learning
    
    #HotSpots = which( (OR>ORfilter$OR1 | OR < ORfilter$OR2) & (xy[,"area"]>minArea & xy[,"area"]<maxArea))
    rotPolys = Rect2PBSpolys(xy[HotSpots,,drop=F])
+   rotPolys=subset(rotPolys, rowSums(is.na(rotPolys)) == 0)
    return(rotPolys)
    ### identified clusters (if any)
  }, ex = function(){

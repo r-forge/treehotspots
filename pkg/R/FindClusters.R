@@ -52,7 +52,9 @@ FindClusters = structure(function# find spatial clusters using supervised learni
    rotX <<- rotX
    rotPolys=NULL
    try({rotPolys = getHotspots(formula,rotX,NullClass,minsize, minArea, maxArea,ORfilter=ORfilter, verbose=verbose, ...)})
-   #browser()
+   if (verbose>1) {
+     browser()
+   } 
    #rotate them back:
    if (!is.null(rotPolys)) {
      #if (theta!=0) rotPolys[,c("X","Y")] = t(t(R) %*% t(as.matrix(rotPolys[,c("X","Y")])))
@@ -83,9 +85,8 @@ FindClusters = structure(function# find spatial clusters using supervised learni
  NumPolys = nrow(polys)/5
  polys[,"PID"] = rep(1:NumPolys, each = 5)
  
- if (verbose>1) {
-   browser()
- } 
+ 
+ 
  if (PLOT){
    plotPolys(polys)
  } 
