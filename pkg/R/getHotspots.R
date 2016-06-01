@@ -113,7 +113,7 @@ getHotspots =structure(function# find spatial clusters using supervised learning
    ### identified clusters (if any)
  }, ex = function(){
    #examples to come
-   data("drugCrimes")
+   data("drugCrimes", envir = environment())
    drugCrimes$MATCH = factor(drugCrimes$MATCH)
    spot1 = getHotspots(MATCH ~ X+Y,drugCrimes)
    suppressWarnings(suppressMessages(library("PBSmapping")))
