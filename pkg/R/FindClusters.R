@@ -17,6 +17,7 @@ FindClusters = structure(function# find spatial clusters using supervised learni
  split = c("deviance", "gini"),##<< Splitting criterion to use.
  PLOT = 0, ##<< plot the top PLOT clusters in each rotation 
  prunePolys = TRUE, ##<< remove polygons due to overlap
+ TreeAlgorithm = c("rpart","ctree")[1], ##<< which tree algorithm to choose
  verbose=0, ##<< level of verbosity
  ... ##<< further arguments to \code{tree}
 ){
@@ -51,10 +52,8 @@ FindClusters = structure(function# find spatial clusters using supervised learni
    #This is a bug in tree.model.frame which seems to search for the data in the global environment
    rotX <<- rotX
    rotPolys=NULL
-   try({rotPolys = getHotspots(formula,rotX,NullClass,minsize, minArea, maxArea,ORfilter=ORfilter, verbose=verbose, ...)})
-   if (verbose>1) {
-     browser()
-   } 
+   try({rotPolys = getHotspots(formula,rotX,NullClass,minsize, minArea, maxArea,ORfilter=ORfilter, TreeAlgorithm=TreeAlgorithm, verbose=verbose, ...)})
+   
    #rotate them back:
    if (!is.null(rotPolys)) {
      #if (theta!=0) rotPolys[,c("X","Y")] = t(t(R) %*% t(as.matrix(rotPolys[,c("X","Y")])))
@@ -85,7 +84,9 @@ FindClusters = structure(function# find spatial clusters using supervised learni
  NumPolys = nrow(polys)/5
  polys[,"PID"] = rep(1:NumPolys, each = 5)
  
- 
+ if (verbose>1) {
+   browser()
+ } 
  
  if (PLOT){
    plotPolys(polys)
@@ -98,5 +99,27 @@ FindClusters = structure(function# find spatial clusters using supervised learni
  ### identified polygon clusters
 }, ex = function(){
  #examples to come
- print(1)
+  data("drugCrimes", envir = environment())
+  drugCrimes$MATCH = factor(drugCrimes$MATCH)
+  
+  #areas in km^2:
+  minAreakm2=0.07; maxAreakm2=1
+  #approx translation into lat/lon area:
+  dy = 69.1# * (endLat - startLat) ;
+  dx = 69.1*cos(mean(drugCrimes$Y)/57.3) 
+  
+  
+  spot1 = FindClusters(MATCH ~ X+Y,drugCrimes, minArea=minAreakm2/(dy*dx), 
+                       maxArea=maxAreakm2/(dy*dx), angles=seq(0,75,by=15),
+                       ORfilter=list(OR=FALSE,OR1=0.8,OR2=0.1))
+  
+  suppressWarnings(suppressMessages(library("PBSmapping")))
+  
+  PBSmapping::plotPolys(spot1[1:5,],density=NULL,xlim=range(drugCrimes$X),ylim=range(drugCrimes$Y),
+                        border="blue",lwd=2)
+  
+  ranRows=sample(1:nrow(drugCrimes), 5000)
+  points(Y~X,data=drugCrimes[ranRows,],col=RgoogleMaps::AddAlpha(4-as.numeric(MATCH)),pch=20,cex=0.6)
+  
+  
 })

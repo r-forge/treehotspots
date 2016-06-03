@@ -6,16 +6,16 @@ getHotspots =structure(function# find spatial clusters using supervised learning
    rotX, ##<< data, possibly already rotated
    NullClass="0", ##<< if y is a factor, this is the category used for the background
    minsize = 200,##<< minimum number of points inside a cluster
-   minArea=20,##<< minimum area of a cluster, units: km^2
-   maxArea=250,##<< maximum area of a cluster, units: km^2
+   minArea=20,##<< minimum area of a cluster, units: lat*lon
+   maxArea=250,##<< maximum area of a cluster, units: lat*lon
    ORfilter=list(OR=TRUE,OR1=1.8,OR2=0.1), ##<< filter on minimum and maximum odds ratios (OR) 
-   TreeAlgorithhm = c("rpart","tree")[1], ##<< which tree algorithm to choose
+   TreeAlgorithm = c("rpart","ctree")[1], ##<< which tree algorithm to choose
    verbose=1,##<< level of verbosity
    ... ##<< further arguments to \code{tree}
  ) {
    
    
-   if (TreeAlgorithhm == "tree"){
+   if (TreeAlgorithm == "tree"){
      rotX = model.frame(formula,rotX)
      ycol = colnames(rotX)[1]
      stopifnot(is.factor(rotX[,1]))
@@ -24,7 +24,7 @@ getHotspots =structure(function# find spatial clusters using supervised learning
      fit =tree(formula, data = rotX, minsize = minsize,...)
      if (inherits(fit, "singlenode") | !inherits(fit, "tree") ) 
        return(NULL)
-   } else if (TreeAlgorithhm == "rpart") {
+   } else if (TreeAlgorithm == "rpart") {
      fit =rpart::rpart(formula, data = rotX, x = TRUE, y = TRUE,,model=TRUE,
                 control=rpart::rpart.control(minsplit = minsize),...)
      
@@ -35,6 +35,22 @@ getHotspots =structure(function# find spatial clusters using supervised learning
      ##############VERY DANGEROUS, VERY IDIOTIC FIX !!!#############
      #rotX <<- rotX;#attach(rotX)
      #party_rp <- as.party(fit)
+   } else if (TreeAlgorithm == "ctree") {
+     fit =partykit::ctree(formula, data = rotX, 
+                       control=partykit::ctree_control(minsplit = minsize),...)
+     
+     tmp = attr(formula(fit),"dataClasses")
+     ycol=names(tmp)[1]
+     xcols=names(tmp)[-1]
+     
+     ctFit = fit
+     fit=list()
+     fit$ctFit = ctFit
+     fit$y = rotX[,ycol]
+     fit$x = rotX[,xcols]
+     ##############VERY DANGEROUS, VERY IDIOTIC FIX !!!#############
+     #rotX <<- rotX;#attach(rotX)
+     #party_rp <- as.party(fit)
    }
    #browser()
    xy=TreePartition(fit,ordvars=xcols)
@@ -42,7 +58,7 @@ getHotspots =structure(function# find spatial clusters using supervised learning
    if (verbose) cat("overall avg:", xy[1,"yval"], ", numRect = ",nrow(xy),"\n")
    if (verbose>1) {
      #browser()
-     if (TreeAlgorithhm == "tree") partition.tree(fit)
+     if (TreeAlgorithm == "tree") partition.tree(fit)
      #point to the cluster outside 
      #getGeoCode("850 Bryant Street, San Francisco")
      #points(-122.4038,37.7753, col = "red", pch=20)
@@ -93,7 +109,7 @@ getHotspots =structure(function# find spatial clusters using supervised learning
    ElSoFar= sum(!HotSpots)
    if (verbose) cat("OR filter eliminates",ElSoFar, "rectangles\n")
    
-   if (1){
+   if (0){
       #Compute the areas in km^2:
      spots=Rect2PBSpolys(xy)
       Areakm2 = suppressWarnings(PBSmapping::calcArea(PBSmapping::as.PolySet(spots[,1:5], projection="LL")))
@@ -106,6 +122,7 @@ getHotspots =structure(function# find spatial clusters using supervised learning
    if (!is.null(maxArea)) HotSpots = HotSpots & xy[,"area"]<maxArea
    if (verbose) cat("maxArea filter eliminates another",sum(!HotSpots)-ElSoFar, "rectangles\n")
    
+   if (all(!HotSpots)) return(NULL)
    #HotSpots = which( (OR>ORfilter$OR1 | OR < ORfilter$OR2) & (xy[,"area"]>minArea & xy[,"area"]<maxArea))
    rotPolys = Rect2PBSpolys(xy[HotSpots,,drop=F])
    rotPolys=subset(rotPolys, rowSums(is.na(rotPolys)) == 0)
@@ -115,9 +132,12 @@ getHotspots =structure(function# find spatial clusters using supervised learning
    #examples to come
    data("drugCrimes", envir = environment())
    drugCrimes$MATCH = factor(drugCrimes$MATCH)
-   spot1 = getHotspots(MATCH ~ X+Y,drugCrimes)
+   spot1 = getHotspots(MATCH ~ X+Y,drugCrimes, minArea=20/10^6,maxArea=250/10^6, 
+                       ORfilter=list(OR=FALSE,OR1=0.8,OR2=0.1))
    suppressWarnings(suppressMessages(library("PBSmapping")))
-   plotPolys(spot1[1:5,],density=NULL,xlim=range(drugCrimes$X),ylim=range(drugCrimes$Y),border="blue",lwd=2)
-   points(Y~X,data=drugCrimes[ranRows,],col=AddAlpha(4-as.numeric(MATCH)),pch=20,cex=0.6)
+   PBSmapping::plotPolys(spot1[1:5,],density=NULL,xlim=range(drugCrimes$X),ylim=range(drugCrimes$Y),
+             border="blue",lwd=2)
+   ranRows=sample(1:nrow(drugCrimes), 5000)
+   points(Y~X,data=drugCrimes[ranRows,],col=RgoogleMaps::AddAlpha(4-as.numeric(MATCH)),pch=20,cex=0.6)
    
  })

@@ -5,6 +5,7 @@ TreePartition = structure(function#Convert the recursively defined partitions of
   add = FALSE, ##<< If true, add to existing plot, otherwise start a new plot.
   ordvars, ##<< The ordering of the variables to be used in a 2D plot. Specify the names in a character string of length 2; the first will be used on the x axis.
   ndigits=3, ##<< number of digits to display/keep
+  ScaleAREA = 1, ##<< multiplier applied to simple area computations 
   verbose=0, ##<< level of verbosity
   ... ##<< Graphical parameters passed to \code{line}
 ){
@@ -53,7 +54,7 @@ TreePartition = structure(function#Convert the recursively defined partitions of
     else stop("wrong variable numbers in tree.")
   }  ###########end of function########################################################
   
-  if (class(TreeFit)=="tree"){ ################tree class#########################
+  if (class(TreeFit)[1] =="tree"){ ################tree class#########################
     if (inherits(TreeFit, "singlenode")) 
       stop("cannot plot singlenode tree")
     if (!inherits(TreeFit, "tree")) 
@@ -123,7 +124,7 @@ TreePartition = structure(function#Convert the recursively defined partitions of
       
       #center of rectangles:
       TreeRects[,c("yy1","yy2")] = rbind(c(NA,NA), t(yy))
-      TreeRects[,"area"] = 10^6*(TreeRects[,"xright"]-TreeRects[,"xleft"])*(TreeRects[,"ytop"]-TreeRects[,"ybottom"])
+      TreeRects[,"area"] = ScaleAREA*(TreeRects[,"xright"]-TreeRects[,"xleft"])*(TreeRects[,"ytop"]-TreeRects[,"ybottom"])
       attr(TreeRects, "vars") = var
       
       lab <- frame$yval[leaves]
@@ -157,20 +158,32 @@ TreePartition = structure(function#Convert the recursively defined partitions of
       }
     }
       
-    } else if (class(TreeFit)=="rpart"){ ################rpart class#########################
+    } else if (class(TreeFit)[1] =="rpart" | "ctFit" %in% names(TreeFit) ){ ################rpart class#########################
      
-      #m <- model.frame(TreeFit)#does not work for rpart!
+      if (class(TreeFit)[1] =="rpart"){
+        party_rp <- partykit::as.party(TreeFit)
+        tmp = attr(formula(TreeFit),"dataClasses")
+      } else {
+        party_rp=TreeFit$ctFit
+        tmp = attr(formula(TreeFit$ctFit),"dataClasses")
+      }
+      
+      #browser()
+        #m <- model.frame(TreeFit)#does not work for rpart!
       rotX = cbind.data.frame(TreeFit$y,TreeFit$x)
-      tmp = attr(formula(TreeFit),"dataClasses")
+      
       colnames(rotX)[1]=names(tmp)[1]
       
       rx <- range(rotX[[ordvars[1L]]])
-      rx <- rx + c(-0.025, 0.025) * diff(rx)
       rz <- range(rotX[[ordvars[2L]]])
+      BBOX = list(rx,rz)
+      names(BBOX) = ordvars
+      
+      rx <- rx + c(-0.025, 0.025) * diff(rx)
       rz <- rz + c(-0.025, 0.025) * diff(rz)
       #browser()
-      party_rp <- partykit::as.party(TreeFit)
-      Leafs = PartitionParty(party_rp, ordvars, PLOT=F)
+       
+      Leafs = PartitionParty(party_rp, ordvars, PLOT=F, BBOX = BBOX)
       nl = length(Leafs)
       LeafProbs = tapply(as.numeric(rotX[,1]), predict(party_rp,type="node"), function(y) mean(y))
       
@@ -178,7 +191,7 @@ TreePartition = structure(function#Convert the recursively defined partitions of
       colnames(TreeRects) = c("xleft", "ybottom", "xright", "ytop")
       rownames(TreeRects) = paste0("rect" , 0:nl)
       TreeRects[1,]= c(rx, rz)[c(1, 3, 2, 4)]
-      #browser()
+      
       k=2
       for (i in names(Leafs)){
         Leaf=Leafs[[as.character(i)]]
@@ -190,7 +203,7 @@ TreePartition = structure(function#Convert the recursively defined partitions of
       #center of rectangles:
       TreeRects[,c("yy1")] = rowMeans(TreeRects[,c(1,3)])
       TreeRects[,c("yy2")] = rowMeans(TreeRects[,c(2,4)])
-      TreeRects[,"area"] = 10^6*(TreeRects[,"xright"]-TreeRects[,"xleft"])*(TreeRects[,"ytop"]-TreeRects[,"ybottom"]) 
+      TreeRects[,"area"] = ScaleAREA*(TreeRects[,"xright"]-TreeRects[,"xleft"])*(TreeRects[,"ytop"]-TreeRects[,"ybottom"]) 
       TreeRects[,"yval"] = c(mean(as.numeric(rotX[,1]),na.rm=T), LeafProbs[names(Leafs)])
       TreeRects[,"lab"] = as.character(format(TreeRects[,"yval"],digits=3))
       
@@ -217,6 +230,10 @@ TreePartition = structure(function#Convert the recursively defined partitions of
       
     }
     #attr(TreeRects, "yy") = yy
+    #browser()
+    ii = order(TreeRects$yval, decreasing=TRUE)
+    TreeRects=TreeRects[ii,]
+    
     return(TreeRects)
     
     #xx <- matrix(xy$xcoord, nrow = 4L)
@@ -237,7 +254,7 @@ TreePartition = structure(function#Convert the recursively defined partitions of
   ### The columns in detail are:
   ### columns 1-4 (xleft,ybottom,xright,ytop) are the bounding box for the respective rectangle
   ### columns 5-6 (yy1,yy2) contain the (x,y) coords of the center of the rectangle
-  ### area gives the rectangular area computed by $10^6 * delta X * delta Y$
+  ### area gives the rectangular area computed by $ScaleAREA * delta X * delta Y$
   ### yval for factors: maximum class probability, for regression: conditional average of response inside rectangle
   ### lab label used by \link{PlotPartition}
   ### maxClass for factors only: majority class label inside rectangle

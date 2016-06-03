@@ -27,5 +27,10 @@ N= 250
 x1 = cbind.data.frame(X=runif(N),Y=runif(N), violent = 0)
 x2 = cbind.data.frame(X=runif(N),Y=runif(N,0.45,0.55), violent = 1)
 x = rbind.data.frame(x1,x2)-c(0.5,0.5)
-TestRotation(x)
+TestRotation(x, center=c(-0.5,-0.5))
+
+cm=colMeans(x)
+y1 = Rotate(x,a=0,center=cm)
+y2 = Rotate(y1,a=0,center=cm,inverseRot=TRUE)
+mean(abs(unlist(y2-x)))
 }

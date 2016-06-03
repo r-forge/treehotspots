@@ -19,6 +19,7 @@ NumPolys = nrow(polys)/5
   polyList = polyList[ix]
   for (i in 1:length(polyList)) polyList[[i]][,"PID"] = i
   BoundBox[,"PID"] = i+1
+  if (verbose>1) browser()
   activePolys = c(1)
   if (verbose) {
     polysToPlot=rbind(BoundBox,polyList[[activePolys]][,colnames(BoundBox)])
@@ -26,27 +27,30 @@ NumPolys = nrow(polys)/5
     title("top polygon")
     #browser()
   }
-  for (i in 2:length(polyList)) {
-    if ( (pOL = PolyOverlap(BoundBox,polyList[[i]])[2]) > minAutonFrac){ 
-      pF=rep(NA,length(activePolys));k=1
-      for (j in activePolys){
-        pF[k]=PolyOverlap(polyList[[j]],polyList[[i]])[2]
-        k=k+1
-      }
-      #if less than 15% overlap, count as a polygon on its own
-      if (max(pF,na.rm=TRUE)<= maxOL) {
-        activePolys = c(activePolys,i)
-      } else {
-        if (verbose) {
-          cat("polygon ", i, "overlaps too heavily with existing ",length(activePolys),"polygons.\n")
-          polysToPlot=rbind(polyList[[i]],do.call("rbind",polyList[activePolys]))
-          polysToPlot=rbind(polysToPlot[,colnames(BoundBox)],BoundBox)
-          cols=c(2,1,seq(3,by=1,length=length(activePolys)-1),0)
-          plotPolys(polysToPlot, col = cols[order(unique(polysToPlot$PID))])
+  lPl=length(polyList)
+  if (lPl>1){
+    for (i in 2:lPl) {
+      if ( (pOL = PolyOverlap(BoundBox,polyList[[i]])[2]) > minAutonFrac){ 
+        pF=rep(NA,length(activePolys));k=1
+        for (j in activePolys){
+          pF[k]=PolyOverlap(polyList[[j]],polyList[[i]])[2]
+          k=k+1
         }
+        #if less than 15% overlap, count as a polygon on its own
+        if (max(pF,na.rm=TRUE)<= maxOL) {
+          activePolys = c(activePolys,i)
+        } else {
+          if (verbose) {
+            cat("polygon ", i, "overlaps too heavily with existing ",length(activePolys),"polygons.\n")
+            polysToPlot=rbind(polyList[[i]],do.call("rbind",polyList[activePolys]))
+            polysToPlot=rbind(polysToPlot[,colnames(BoundBox)],BoundBox)
+            cols=c(2,1,seq(3,by=1,length=length(activePolys)-1),0)
+            plotPolys(polysToPlot, col = cols[order(unique(polysToPlot$PID))])
+          }
+        }
+      } else {
+        if (verbose) cat("polygon ", i, "fractional overlap with bounding box is only", round(pOL,3), ". Rejected.\n")
       }
-    } else {
-      if (verbose) cat("polygon ", i, "fractional overlap with bounding box is only", round(pOL,3), ". Rejected.\n")
     }
   }
   polys = do.call("rbind", polyList[activePolys])
